@@ -1,8 +1,8 @@
 package de.lhns.p2pfs
 
+import java.nio.file._
 import java.nio.file.attribute.UserPrincipalLookupService
 import java.nio.file.spi.FileSystemProvider
-import java.nio.file._
 import java.{lang, util}
 
 case class FileSystemDelegate(fileSystem: FileSystem) extends FileSystem {
@@ -41,4 +41,28 @@ case class FileSystemDelegate(fileSystem: FileSystem) extends FileSystem {
 
   override def newWatchService(): WatchService =
     fileSystem.newWatchService()
+}
+
+object FileSystemDelegate {
+  def mapPath(fileSystem: FileSystem)(f: Path => PathDelegate): FileSystemDelegate =
+    new FileSystemDelegate(fileSystem) {
+      override def getRootDirectories: lang.Iterable[Path] = {
+        val iterable = super.getRootDirectories
+
+        new lang.Iterable[Path] {
+          override def iterator(): util.Iterator[Path] = {
+            val iterator = iterable.iterator()
+
+            new util.Iterator[Path] {
+              override def hasNext: Boolean = iterator.hasNext
+
+              override def next(): Path = f(iterator.next())
+            }
+          }
+        }
+      }
+
+      override def getPath(first: String, more: String*): Path =
+        f(super.getPath(first, more: _*))
+    }
 }

@@ -88,79 +88,82 @@ case class PathDelegate(path: Path) extends Path {
 
 object PathDelegate {
   @tailrec
-  def undelegate(path: Path): Path = path match {
-    case PathDelegate(path) => undelegate(path)
-    case path => path
-  }
+  def undelegate(path: Path): Path =
+    path match {
+      case PathDelegate(path) => undelegate(path)
+      case path => path
+    }
 
-  def undelegateArgs(path: Path): PathDelegate = new PathDelegate(path) {
-    override def startsWith(other: Path): Boolean =
-      path.startsWith(undelegate(other))
+  def undelegatePathArgs(path: Path): PathDelegate =
+    new PathDelegate(path) {
+      override def startsWith(other: Path): Boolean =
+        path.startsWith(undelegate(other))
 
-    override def endsWith(other: Path): Boolean =
-      path.endsWith(undelegate(other))
+      override def endsWith(other: Path): Boolean =
+        path.endsWith(undelegate(other))
 
-    override def resolve(other: Path): Path =
-      super.resolve(undelegate(other))
+      override def resolve(other: Path): Path =
+        super.resolve(undelegate(other))
 
-    override def resolveSibling(other: Path): Path =
-      super.resolveSibling(undelegate(other))
+      override def resolveSibling(other: Path): Path =
+        super.resolveSibling(undelegate(other))
 
-    override def relativize(other: Path): Path =
-      super.relativize(undelegate(other))
+      override def relativize(other: Path): Path =
+        super.relativize(undelegate(other))
 
-    override def compareTo(other: Path): Int =
-      undelegate(path).compareTo(undelegate(other))
-  }
+      override def compareTo(other: Path): Int =
+        undelegate(path).compareTo(undelegate(other))
+    }
 
-  def delegateResults(path: Path)(delegate: Path => PathDelegate): PathDelegate = new PathDelegate(delegate(path)) {
-    override def getRoot: Path =
-      delegate(super.getRoot)
+  def delegateDeep(path: Path)(delegate: Path => PathDelegate): PathDelegate =
+    new PathDelegate(delegate(path)) {
+      override def getRoot: Path =
+        delegate(super.getRoot)
 
-    override def getFileName: Path =
-      delegate(super.getFileName)
+      override def getFileName: Path =
+        delegate(super.getFileName)
 
-    override def getParent: Path =
-      delegate(super.getParent)
+      override def getParent: Path =
+        delegate(super.getParent)
 
-    override def getName(index: Int): Path =
-      delegate(super.getName(index))
+      override def getName(index: Int): Path =
+        delegate(super.getName(index))
 
-    override def subpath(beginIndex: Int, endIndex: Int): Path =
-      delegate(super.subpath(beginIndex, endIndex))
+      override def subpath(beginIndex: Int, endIndex: Int): Path =
+        delegate(super.subpath(beginIndex, endIndex))
 
-    override def normalize(): Path =
-      delegate(super.normalize())
+      override def normalize(): Path =
+        delegate(super.normalize())
 
-    override def resolve(other: Path): Path =
-      delegate(super.resolve(other))
+      override def resolve(other: Path): Path =
+        delegate(super.resolve(other))
 
-    override def resolve(other: String): Path =
-      delegate(super.resolve(other))
+      override def resolve(other: String): Path =
+        delegate(super.resolve(other))
 
-    override def resolveSibling(other: Path): Path =
-      delegate(super.resolveSibling(other))
+      override def resolveSibling(other: Path): Path =
+        delegate(super.resolveSibling(other))
 
-    override def resolveSibling(other: String): Path =
-      delegate(super.resolveSibling(other))
+      override def resolveSibling(other: String): Path =
+        delegate(super.resolveSibling(other))
 
-    override def relativize(other: Path): Path =
-      delegate(super.relativize(other))
+      override def relativize(other: Path): Path =
+        delegate(super.relativize(other))
 
-    override def toAbsolutePath: Path =
-      delegate(super.toAbsolutePath)
+      override def toAbsolutePath: Path =
+        delegate(super.toAbsolutePath)
 
-    override def toRealPath(options: LinkOption*): Path =
-      delegate(super.toRealPath(options: _*))
+      override def toRealPath(options: LinkOption*): Path =
+        delegate(super.toRealPath(options: _*))
 
-    override def iterator(): util.Iterator[Path] = {
-      val iterator = super.iterator()
+      override def iterator(): util.Iterator[Path] = {
+        val iterator = super.iterator()
 
-      new util.Iterator[Path] {
-        override def hasNext: Boolean = iterator.hasNext
+        new util.Iterator[Path] {
+          override def hasNext: Boolean = iterator.hasNext
 
-        override def next(): Path = delegate(iterator.next())
+          override def next(): Path = delegate(iterator.next())
+        }
       }
     }
-  }
 }
